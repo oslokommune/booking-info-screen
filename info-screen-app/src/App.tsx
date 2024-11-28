@@ -7,6 +7,17 @@ const server =
         ? 'http://localhost:9090'
         : 'https://api.booking.oslo.kommune.no';
 
+const useConfetti = (bookings : number) => {
+    const [showConfetti, setShowConfetti] = useState(false);
+    useEffect(() => {
+        if (bookings > 0) {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 7000); // Show confetti for 3 seconds
+        }
+    }, [bookings]);
+    return { showConfetti };
+}
+
 const useInfoScreen = () => {
     const [dailyBookings, setDailyBookings] = React.useState<{
         dailyBookings: number;
@@ -41,17 +52,7 @@ function App() {
     const {
         dailyBookings: { dailyBookings, yesterdayBookings },
     } = useInfoScreen();
-    const [prevBookings, setPrevBookings] = useState<number>(0);
-    const [showConfetti, setShowConfetti] = useState(false);
-
-    useEffect(() => {
-        if (prevBookings !== 0 && dailyBookings > prevBookings) {
-            // Trigger confetti if bookings have increased
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 3000); // Show confetti for 3 seconds
-        }
-        setPrevBookings(dailyBookings); // Update previous bookings
-    }, [dailyBookings, prevBookings]);
+    const {showConfetti} = useConfetti(dailyBookings);
 
     return (
         <div className="App">
