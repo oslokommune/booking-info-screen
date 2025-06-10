@@ -1,14 +1,97 @@
 .App {
-  background-color: #282c34;
-  min-height: 100vh;
-  color: white;
-  display: flex;
-  font-size: 3em;
-  align-items: center;
-  justify-content: center;
+    background-color: #282c34;
+    min-height: 100vh;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    font-size: 3em;
+    align-items: center;
+    padding: 20px;
+    justify-content: center;
+}
+
+.App > * {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+}
+
+.App > *:first-child {
+    border-right: 2px solid white;
+
 }
 
 .bookings {
-  text-align: left;
-  font-size: 1.5em;
+    text-align: left;
+    font-size: 1.5em;
+}
+
+.zendesk-ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    caption {
+        display: none;
+    }
+
+    tbody {
+        ul {
+            margin: 0;
+            padding: 0;
+        }
+    }
+
+    td {
+        text-align: center;
+        vertical-align: top;
+    }
+}
+
+.ticket {
+    font-size: 18px;
+    list-style: none;
+    margin: 0.5em auto;
+    display: block;
+    box-sizing: border-box;
+    width: 220px;
+    padding: 0.1em;
+    vertical-align: center;
+
+    h2 {
+        font-size: 36px;
+        margin: 0;
+    }
+}
+
+.ticket.status-open {
+    background-color: rgb(252, 163, 71);
+    color: black;
+    .ticket-update-dt {
+        color: #424242;
+    }
+}
+
+.ticket.status-pending {
+    background-color: rgb(54, 84, 205);
+    color: white;
+}
+
+.ticket.status-solved {
+    background-color: rgb(92, 105, 112);
+    color: white;
+}
+
+.ticket-update-dt {
+    font-size: 8px;
+    color: #ccc;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+
+h2 {
+    font-size: 18px;
+    margin-bottom: 0.5em;
 }

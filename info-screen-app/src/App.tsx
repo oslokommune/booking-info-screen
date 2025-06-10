@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Confetti from 'react-confetti';
 import './App.css';
+import {ZendeskTickets} from "./ZendeskTickets";
 
-const server =
+export const server =
     process.env.NODE_ENV === 'development'
         ? 'http://localhost:9090'
         : 'https://api.booking.oslo.kommune.no';
 
-const useConfetti = (bookings : number) => {
+const useConfetti = (bookings: number) => {
     const [showConfetti, setShowConfetti] = useState(false);
     useEffect(() => {
         if (bookings > 0) {
@@ -15,7 +16,7 @@ const useConfetti = (bookings : number) => {
             setTimeout(() => setShowConfetti(false), 7000); // Show confetti for 3 seconds
         }
     }, [bookings]);
-    return { showConfetti };
+    return {showConfetti};
 }
 
 const useInfoScreen = () => {
@@ -50,13 +51,13 @@ const useInfoScreen = () => {
 
 function App() {
     const {
-        dailyBookings: { dailyBookings, yesterdayBookings },
+        dailyBookings: {dailyBookings, yesterdayBookings},
     } = useInfoScreen();
     const {showConfetti} = useConfetti(dailyBookings);
 
     return (
         <div className="App">
-            {showConfetti && <Confetti />}
+            {showConfetti && <Confetti/>}
             <table>
                 <tbody>
                 <tr>
@@ -69,6 +70,7 @@ function App() {
                 </tr>
                 </tbody>
             </table>
+            <ZendeskTickets/>
         </div>
     );
 }
