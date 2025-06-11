@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {server} from "./App";
 import {ZendeskTicket} from "./Ticket";
 
-const TicketWidget = (props: { ticket: any }) => {
+const TicketWidget = (props: { ticket: ZendeskTicket }) => {
     let lastUpdatedDateTime = new Date(props.ticket.updated_at);
     const status = ['new', 'open'].includes(props.ticket.status) ? 'open' : props.ticket.status;
 
@@ -23,7 +23,6 @@ export const ZendeskTickets = () => {
             }
         }).then(async (res) => {
             const tickets = await res.json();
-            console.log('Fetched tickets:', tickets);
             setTickets(tickets);
         });
     };
