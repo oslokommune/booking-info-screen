@@ -4,7 +4,9 @@ import {ZendeskTicket} from "./Ticket";
 
 const TicketWidget = (props: { ticket: any }) => {
     let lastUpdatedDateTime = new Date(props.ticket.updated_at);
-    return <li className={"ticket status-" + props.ticket.status}>
+    const status = ['new', 'open'].includes(props.ticket.status) ? 'open' : props.ticket.status;
+
+    return <li className={"ticket status-" + status}>
         <h2>#{props.ticket.id}</h2>
         <span
             className={'ticket-update-dt'}>{lastUpdatedDateTime.toLocaleDateString()} - {lastUpdatedDateTime.toLocaleTimeString()}</span>
@@ -36,7 +38,7 @@ export const ZendeskTickets = () => {
         return <div>Henter Zendesk-saker ...</div>;
     }
     // Make separate lists for each status
-    const openTickets = tickets.filter(ticket => ticket.status === 'open');
+    const openTickets = tickets.filter(ticket => ['new', 'open'].includes(ticket.status));
     const pendingTickets = tickets.filter(ticket => ticket.status === 'pending');
     const solvedTodayTickets = tickets.filter(ticket => {
         const updatedAt = new Date(ticket.updated_at);
