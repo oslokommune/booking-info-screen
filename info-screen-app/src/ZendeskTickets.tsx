@@ -15,6 +15,7 @@ const TicketWidget = (props: { ticket: ZendeskTicket }) => {
 
 export const ZendeskTickets = () => {
     const [tickets, setTickets] = useState<Array<ZendeskTicket> | null>(null);
+    const [error, setError] = useState<object | null>(null);
 
     const fetchTickets = () => {
         fetch(server + '/api/info-screen/zendesk/tickets', {
@@ -23,7 +24,11 @@ export const ZendeskTickets = () => {
             }
         }).then(async (res) => {
             const tickets = await res.json();
+            setError(null);
             setTickets(tickets);
+        }).catch((error) => {
+            console.error("Error fetching Zendesk tickets:", error);
+            setTickets([]);
         });
     };
 
@@ -32,6 +37,13 @@ export const ZendeskTickets = () => {
         let interval = setInterval(fetchTickets, 20 * 1000);
         return () => clearInterval(interval);
     }, []);
+
+    if (error) {
+        return <div className="error">
+            <div role={"alert"}>Kunne ikke hente Zendesk-saker: {'status' in error && error.status}</div>
+            <pre>{JSON.stringify(error)}</pre>
+        </div>;
+    }
 
     if (tickets === null) {
         return <div>Henter Zendesk-saker ...</div>;
