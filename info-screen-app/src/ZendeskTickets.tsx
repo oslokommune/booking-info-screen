@@ -40,7 +40,7 @@ export const ZendeskTickets = () => {
 
     if (error) {
         return <div className="error">
-            <div role={"alert"}>Kunne ikke hente Zendesk-saker: {'status' in error && error.status}</div>
+            <div role={"alert"}>Kunne ikke hente Zendesk-saker: {'status' in error && error.status as string}</div>
             <pre>{JSON.stringify(error)}</pre>
         </div>;
     }
