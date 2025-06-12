@@ -23,11 +23,18 @@ export const ZendeskTickets = () => {
                 'X-API-KEY': 'min-api-key',
             }
         }).then(async (res) => {
-            const tickets = await res.json();
-            setError(null);
-            setTickets(tickets);
+            console.log("Response status", res.status);
+            if (res.status !== 200) {
+                setError(res.statusText ? {status: res.status, statusText: res.statusText} : {status: res.status});
+                setTickets(null);
+            } else {
+                const tickets = await res.json();
+                setError(null);
+                setTickets(tickets);
+            }
         }).catch((error) => {
             console.error("Error fetching Zendesk tickets:", error);
+            setError(error);
             setTickets([]);
         });
     };
@@ -41,7 +48,7 @@ export const ZendeskTickets = () => {
     if (error) {
         return <div className="error">
             <div role={"alert"}>Kunne ikke hente Zendesk-saker: {'status' in error && error.status as string}</div>
-            <pre>{JSON.stringify(error)}</pre>
+            <blockquote>{JSON.stringify(error)}</blockquote>
         </div>;
     }
 
@@ -70,7 +77,7 @@ export const ZendeskTickets = () => {
             <tbody>
             <tr>
                 <td>
-                    {openTickets.length === 0 ? <div>🎉</div> :
+                    {openTickets.length === 0 ? <div>Ingen!</div> :
                         <ul>
                             {openTickets.map((ticket) => (
                                 <TicketWidget key={ticket.id} ticket={ticket}/>
