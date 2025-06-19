@@ -1,12 +1,12 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState,} from "react";
 import {server} from "./App";
 import {ZendeskTicket} from "./Ticket";
 
-const TicketWidget = (props: { ticket: ZendeskTicket }) => {
+const TicketWidget = (props: { ticket: ZendeskTicket, style?: any }) => {
     let lastUpdatedDateTime = new Date(props.ticket.updated_at);
     const status = ['new', 'open'].includes(props.ticket.status) ? 'open' : props.ticket.status;
 
-    return <li className={"ticket status-" + status}>
+    return <li className={"ticket status-" + status} style={props.style}>
         <h2>#{props.ticket.id}</h2>
         <span
             className={'ticket-update-dt'}>{lastUpdatedDateTime.toLocaleDateString()} - {lastUpdatedDateTime.toLocaleTimeString()}</span>
@@ -15,10 +15,12 @@ const TicketWidget = (props: { ticket: ZendeskTicket }) => {
 
 type ListWithOverflow<T> = Array<T> & {
     overflow: number | boolean;
+    cacheKey: string;
 }
 
-const useListWithOverflow = <T, >(list: Array<T>, maxItems: number): ListWithOverflow<T> => {
+const useListWithOverflow = <T extends ZendeskTicket, >(list: Array<T>, maxItems: number): ListWithOverflow<T> => {
     const [overflow, setOverflow] = useState<number | boolean>(false);
+    const cacheKey = [...list].map(item => item.id).join('-') + maxItems;
 
     useEffect(() => {
         if (list.length > maxItems) {
@@ -30,36 +32,59 @@ const useListWithOverflow = <T, >(list: Array<T>, maxItems: number): ListWithOve
 
     let result = list.slice(0, maxItems);
     (result as ListWithOverflow<T>).overflow = overflow;
+    (result as ListWithOverflow<T>).cacheKey = cacheKey;
     return result as ListWithOverflow<T>;
 }
 
-const TicketsColumn = (props: { ticketsList: ListWithOverflow<ZendeskTicket>, emptyContent?: JSX.Element }) => <>
-    {props.ticketsList.length === 0 ? (props.emptyContent || <div></div>) :
-        <ul>
-            {props.ticketsList.map(ticket => <TicketWidget key={ticket.id} ticket={ticket}/>)}
-            {props.ticketsList.overflow && <li className="overflow-indicator">&nbsp; {props.ticketsList.overflow} flere</li>}
-        </ul>
-    }
-</>;
+const TicketsColumn = (props: { ticketsList: ListWithOverflow<ZendeskTicket>, emptyContent?: JSX.Element }) => {
+
+    return <>
+        {props.ticketsList.length === 0 ? (props.emptyContent || <div></div>) :
+            <ul>
+                {props.ticketsList.map(ticket => <TicketWidget
+                    key={ticket.id} ticket={ticket}/>)}
+                {props.ticketsList.overflow &&
+                    <li className="overflow-indicator">&nbsp; {props.ticketsList.overflow} flere</li>}
+            </ul>
+        }
+    </>;
+};
 
 export const ZendeskTickets = () => {
     const [tickets, setTickets] = useState<Array<ZendeskTicket> | null>(null);
     const [error, setError] = useState<object | null>(null);
 
+    const doFetch = () => fetch(server + '/api/info-screen/zendesk/tickets', {
+        headers: {
+            'X-API-KEY': 'min-api-key',
+        }
+    })
+
+    /*
+        const doFetch = () => Promise.resolve(({
+            status: 200,
+            statusText: 'OK',
+            json: async () => ([
+                {id: 1, status: 'new', updated_at: '2023-10-01T12:00:00Z'},
+                ...tickets || []])
+        }));
+    */
+
     const fetchTickets = () => {
-        fetch(server + '/api/info-screen/zendesk/tickets', {
-            headers: {
-                'X-API-KEY': 'min-api-key',
-            }
-        }).then(async (res) => {
+        doFetch().then(async (res) => {
             console.log("Response status", res.status);
             if (res.status !== 200) {
                 setError(res.statusText ? {status: res.status, statusText: res.statusText} : {status: res.status});
                 setTickets(null);
             } else {
-                const tickets = await res.json();
+                const tickets: Array<ZendeskTicket> = await res.json();
                 setError(null);
-                setTickets(tickets);
+                // Mark new arrivals
+                const augmentedTickets: Array<ZendeskTicket> = tickets.map(ticket => {
+                    const isNewArrival = !tickets.some(t => t.id === ticket.id && t.updated_at === ticket.updated_at);
+                    return {...ticket, isNewArrival};
+                });
+                setTickets(augmentedTickets);
             }
         }).catch((error) => {
             console.error("Error fetching Zendesk tickets:", error);
@@ -97,7 +122,7 @@ const ZendeskTicketsTable = ({tickets}: { tickets: Array<ZendeskTicket> }) => {
         const updatedAt = new Date(ticket.updated_at);
         const today = new Date();
         return ticket.status === 'solved' && updatedAt.toDateString() === today.toDateString();
-    }), 5);
+    }), maxTicketsInColumn);
 
     return (
         <table className="zendesk-ticket-table">

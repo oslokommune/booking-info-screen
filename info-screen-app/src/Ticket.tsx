@@ -2,6 +2,7 @@ export interface ZendeskTicket {
     id: number,
     status: 'new' | 'open' | 'pending' | 'hold' | 'solved',
     updated_at: string,
+    isNewArrival?: boolean,
 }
 
 export const Ticket = ({ticket}: { ticket: ZendeskTicket }) =>
