@@ -49,7 +49,39 @@ const useInfoScreen = () => {
     };
 };
 
+
+const useReloadOnChangedAssets = () => {
+    const assetTags: NodeListOf<HTMLScriptElement | HTMLLinkElement> = document.head.querySelectorAll('link[rel="stylesheet"], script[src]');
+    const [reloadState, setReloadState] = useState<"RELOADING" | null>(null);
+    useEffect(() => {
+        window.setInterval(() => {
+            assetTags.forEach((tag, index) => {
+                // Do a HEAD request to check if the asset has changed
+                fetch(tag instanceof HTMLLinkElement ? tag.href : tag.src, {
+                    method: 'HEAD',
+                    cache: 'no-cache',
+                }).then(res => {
+                    if (res.status === 404) {
+                        // If the asset has changed, reload the page
+                        console.log(`Asset changed: ${tag instanceof HTMLLinkElement ? tag.href : tag.src}`);
+                        window.setTimeout(() => {
+                            window.location.reload();
+                        }, 10_000);
+                        setReloadState("RELOADING");
+                    }
+                }).catch
+                (err => {
+                    console.error(`Error checking asset ${index}:`, err);
+                });
+            })
+        }, 10 * 1000); // Check every 10 seconds
+    }, []);
+    return {reloadState};
+
+}
+
 function App() {
+    useReloadOnChangedAssets();
     const {
         dailyBookings: {dailyBookings, yesterdayBookings},
     } = useInfoScreen();

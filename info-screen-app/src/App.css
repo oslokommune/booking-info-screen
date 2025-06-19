@@ -72,8 +72,8 @@ body {
 }
 
 .ticket.status-open {
-    background-color: rgb(252, 163, 71);
-    color: black;
+    background-color: rgb(101, 237, 107);
+    color: #ffffff;
     .ticket-update-dt {
         color: #424242;
     }
