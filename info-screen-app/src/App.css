@@ -2,6 +2,7 @@ body {
     background-color: #282c34;
     padding: 3em;
 }
+
 .App {
     background-color: #282c34;
     min-height: 100vh;
@@ -34,25 +35,25 @@ body {
     width: 100%;
     border-collapse: collapse;
 
-    caption {
-        display: none;
-    }
+}
 
-    th {
+caption {
+    display: none;
+}
+
+th {
     font-size: 18pt;
 }
 
-    tbody {
-        ul {
-            margin: 0;
-            padding: 0;
-        }
-    }
+td {
+    text-align: center;
+    vertical-align: top;
+}
 
-    td {
-        text-align: center;
-        vertical-align: top;
-    }
+
+ul {
+    margin: 0;
+    padding: 0;
 }
 
 .ticket {
@@ -65,18 +66,15 @@ body {
     padding: 0.1em;
     vertical-align: center;
 
-    h2 {
-        font-size: 36px;
-        margin: 0;
-    }
 }
 
 .ticket.status-open {
     background-color: rgb(101, 237, 107);
     color: #ffffff;
-    .ticket-update-dt {
-        color: #424242;
-    }
+}
+
+.ticket-update-dt {
+    color: #424242;
 }
 
 .ticket.status-pending {
@@ -94,14 +92,22 @@ body {
     color: white;
 }
 
+.overflow-indicator {
+    background-color: transparent;
+    color: white;
+    list-style-type: '+';
+    font-size: 20px;
+    text-align: left;
+}
+
 h1 {
     font-size: 2em;
     margin-bottom: 0.5em;
 }
 
 h2 {
-    font-size: 18px;
-    margin-bottom: 0.5em;
+    font-size: 48px;
+    margin: 0 0 0.5em;
 }
 
 blockquote {

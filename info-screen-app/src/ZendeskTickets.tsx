@@ -13,6 +13,35 @@ const TicketWidget = (props: { ticket: ZendeskTicket }) => {
     </li>;
 };
 
+type ListWithOverflow<T> = Array<T> & {
+    overflow: number | boolean;
+}
+
+const useListWithOverflow = <T, >(list: Array<T>, maxItems: number): ListWithOverflow<T> => {
+    const [overflow, setOverflow] = useState<number | boolean>(false);
+
+    useEffect(() => {
+        if (list.length > maxItems) {
+            setOverflow(maxItems < 0 || list.length - maxItems);
+        } else {
+            setOverflow(false);
+        }
+    }, [list, maxItems]);
+
+    let result = list.slice(0, maxItems);
+    (result as ListWithOverflow<T>).overflow = overflow;
+    return result as ListWithOverflow<T>;
+}
+
+const TicketsColumn = (props: { ticketsList: ListWithOverflow<ZendeskTicket>, emptyContent?: JSX.Element }) => <>
+    {props.ticketsList.length === 0 ? (props.emptyContent || <div></div>) :
+        <ul>
+            {props.ticketsList.map(ticket => <TicketWidget key={ticket.id} ticket={ticket}/>)}
+            {props.ticketsList.overflow && <li className="overflow-indicator">&nbsp; {props.ticketsList.overflow} flere</li>}
+        </ul>
+    }
+</>;
+
 export const ZendeskTickets = () => {
     const [tickets, setTickets] = useState<Array<ZendeskTicket> | null>(null);
     const [error, setError] = useState<object | null>(null);
@@ -55,14 +84,20 @@ export const ZendeskTickets = () => {
     if (tickets === null) {
         return <div>Henter Zendesk-saker ...</div>;
     }
+
+    return <ZendeskTicketsTable tickets={tickets}/>;
+}
+
+const ZendeskTicketsTable = ({tickets}: { tickets: Array<ZendeskTicket> }) => {
+    const maxTicketsInColumn = 5;
     // Make separate lists for each status
-    const openTickets = tickets.filter(ticket => ['new', 'open'].includes(ticket.status));
-    const pendingTickets = tickets.filter(ticket => ticket.status === 'pending');
-    const solvedTodayTickets = tickets.filter(ticket => {
+    const openTickets = useListWithOverflow(tickets.filter(ticket => ['new', 'open'].includes(ticket.status)), maxTicketsInColumn);
+    const pendingTickets = useListWithOverflow(tickets.filter(ticket => ticket.status === 'pending'), maxTicketsInColumn);
+    const solvedTodayTickets = useListWithOverflow(tickets.filter(ticket => {
         const updatedAt = new Date(ticket.updated_at);
         const today = new Date();
         return ticket.status === 'solved' && updatedAt.toDateString() === today.toDateString();
-    });
+    }), 5);
 
     return (
         <table className="zendesk-ticket-table">
@@ -77,31 +112,13 @@ export const ZendeskTickets = () => {
             <tbody>
             <tr>
                 <td>
-                    {openTickets.length === 0 ? <div>Ingen!</div> :
-                        <ul>
-                            {openTickets.map((ticket) => (
-                                <TicketWidget key={ticket.id} ticket={ticket}/>
-                            ))}
-                        </ul>
-                    }
+                    <TicketsColumn ticketsList={openTickets} emptyContent={<div>Ingen!</div>}/>
                 </td>
                 <td>
-                    {pendingTickets.length === 0 ? <div></div> :
-                        <ul>
-                            {pendingTickets.map((ticket) => (
-                                <TicketWidget key={ticket.id} ticket={ticket}/>
-                            ))}
-                        </ul>
-                    }
+                    <TicketsColumn ticketsList={pendingTickets}/>
                 </td>
                 <td>
-                    {solvedTodayTickets.length === 0 ? <div></div> :
-                        <ul>
-                            {solvedTodayTickets.map((ticket) => (
-                                <TicketWidget key={ticket.id} ticket={ticket}/>
-                            ))}
-                        </ul>
-                    }
+                    <TicketsColumn ticketsList={solvedTodayTickets}/>
                 </td>
             </tr>
             </tbody>
