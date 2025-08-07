@@ -1,4 +1,4 @@
-import {useEffect, useState,} from "react";
+import {useEffect, useMemo, useState,} from "react";
 import {server} from "./App";
 import {ZendeskTicket} from "./Ticket";
 
@@ -18,10 +18,12 @@ type ListWithOverflow<T> = Array<T> & {
     cacheKey: string;
 }
 
-const useListWithOverflow = <T extends ZendeskTicket, >(list: Array<T>, maxItems: number): ListWithOverflow<T> => {
-    const [overflow, setOverflow] = useState<number | boolean>(false);
-    const cacheKey = [...list].map(item => item.id).join('-') + maxItems;
+const dedup = <T extends any>(list: Array<T>, field: keyof T): Array<T> => Array.from(new Map(list.map(ticket => [ticket[field], ticket])).values());
 
+const useListWithOverflow = <T extends ZendeskTicket, >(list1: Array<T>, maxItems: number): ListWithOverflow<T> => {
+    const [overflow, setOverflow] = useState<number | boolean>(false);
+    const list = useMemo(() => dedup(list1, "id"), [list1]);
+    const cacheKey = [...list].map(item => item.id).join('-') + maxItems;
     useEffect(() => {
         if (list.length > maxItems) {
             setOverflow(maxItems < 0 || list.length - maxItems);
@@ -50,15 +52,42 @@ const TicketsColumn = (props: { ticketsList: ListWithOverflow<ZendeskTicket>, em
     </>;
 };
 
+const fetchTickets = (setTickets: (tickets: Array<ZendeskTicket> | null) => any, setError: (error: any) => void) => {
+
+        const doFetch = () => fetch(server + '/api/info-screen/zendesk/tickets', {
+            headers: {
+                'X-API-KEY': 'min-api-key',
+            }
+        })
+
+        doFetch().then(async (res) => {
+        console.log("Response status", res.status);
+        if (res.status !== 200) {
+            setError(res.statusText ? {status: res.status, statusText: res.statusText} : {status: res.status});
+            setTickets(null);
+        } else {
+            const tickets: Array<ZendeskTicket> = await res.json();
+            setError(null);
+            // Mark new arrivals
+            const augmentedTickets: Array<ZendeskTicket> = tickets.map(ticket => {
+                const isNewArrival = !tickets.some(t => t.id === ticket.id && t.updated_at === ticket.updated_at);
+                return {...ticket, isNewArrival};
+            });
+            setTickets(augmentedTickets);
+        }
+    }).catch((error: any) => {
+        console.error("Error fetching Zendesk tickets:", error);
+        setError(error);
+        setTickets([]);
+    });
+}
+;
+
+
 export const ZendeskTickets = () => {
     const [tickets, setTickets] = useState<Array<ZendeskTicket> | null>(null);
     const [error, setError] = useState<object | null>(null);
 
-    const doFetch = () => fetch(server + '/api/info-screen/zendesk/tickets', {
-        headers: {
-            'X-API-KEY': 'min-api-key',
-        }
-    })
 
     /*
         const doFetch = () => Promise.resolve(({
@@ -70,31 +99,9 @@ export const ZendeskTickets = () => {
         }));
     */
 
-    const fetchTickets = () => {
-        doFetch().then(async (res) => {
-            console.log("Response status", res.status);
-            if (res.status !== 200) {
-                setError(res.statusText ? {status: res.status, statusText: res.statusText} : {status: res.status});
-                setTickets(null);
-            } else {
-                const tickets: Array<ZendeskTicket> = await res.json();
-                setError(null);
-                // Mark new arrivals
-                const augmentedTickets: Array<ZendeskTicket> = tickets.map(ticket => {
-                    const isNewArrival = !tickets.some(t => t.id === ticket.id && t.updated_at === ticket.updated_at);
-                    return {...ticket, isNewArrival};
-                });
-                setTickets(augmentedTickets);
-            }
-        }).catch((error) => {
-            console.error("Error fetching Zendesk tickets:", error);
-            setError(error);
-            setTickets([]);
-        });
-    };
 
     useEffect(() => {
-        fetchTickets();
+        fetchTickets(setTickets, setError);
         let interval = setInterval(fetchTickets, 20 * 1000);
         return () => clearInterval(interval);
     }, []);
