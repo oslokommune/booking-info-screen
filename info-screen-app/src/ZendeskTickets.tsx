@@ -125,11 +125,17 @@ const ZendeskTicketsTable = ({tickets}: { tickets: Array<ZendeskTicket> }) => {
     // Make separate lists for each status
     const openTickets = useListWithOverflow(tickets.filter(ticket => ['new', 'open'].includes(ticket.status)), maxTicketsInColumn);
     const pendingTickets = useListWithOverflow(tickets.filter(ticket => ticket.status === 'pending'), maxTicketsInColumn);
-    const solvedTodayTickets = useListWithOverflow(tickets.filter(ticket => {
-        const updatedAt = new Date(ticket.updated_at);
-        const today = new Date();
-        return ticket.status === 'solved' && updatedAt.toDateString() === today.toDateString();
-    }), maxTicketsInColumn);
+    const solvedTodayTickets = useListWithOverflow(
+     tickets
+       .filter(ticket => {
+         const updatedAt = new Date(ticket.updated_at);
+         const today = new Date();
+         return ticket.status === 'solved' && updatedAt.toDateString() === today.toDateString();
+     })
+     // <- ensure newest first so dedup keeps the latest per id
+     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+     maxTicketsInColumn
+ );
 
     return (
         <table className="zendesk-ticket-table">
