@@ -82,6 +82,7 @@ const useReloadOnChangedAssets = () => {
 
 function App() {
     useReloadOnChangedAssets();
+    const module = new URLSearchParams(window.location.search).get('module') || 'bookings';
     const {
         dailyBookings: {dailyBookings, yesterdayBookings},
     } = useInfoScreen();
@@ -90,19 +91,23 @@ function App() {
     return (
         <div className="App">
             {showConfetti && <Confetti/>}
-            <table>
-                <tbody>
-                <tr>
-                    <td>Bookinger i dag:</td>
-                    <td className="bookings">{dailyBookings}</td>
-                </tr>
-                <tr>
-                    <td>Bookinger i går:</td>
-                    <td className="bookings">{yesterdayBookings}</td>
-                </tr>
-                </tbody>
-            </table>
-            <ZendeskTickets/>
+            {module === 'bookings' &&
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>Bookinger i dag:</td>
+                        <td className="bookings">{dailyBookings}</td>
+                    </tr>
+                    <tr>
+                        <td>Bookinger i går:</td>
+                        <td className="bookings">{yesterdayBookings}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            }
+            {module === 'tickets' &&
+                <ZendeskTickets/>
+            }
         </div>
     );
 }
