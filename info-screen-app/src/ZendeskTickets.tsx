@@ -88,21 +88,10 @@ export const ZendeskTickets = () => {
     const [tickets, setTickets] = useState<Array<ZendeskTicket> | null>(null);
     const [error, setError] = useState<object | null>(null);
 
-
-    /*
-        const doFetch = () => Promise.resolve(({
-            status: 200,
-            statusText: 'OK',
-            json: async () => ([
-                {id: 1, status: 'new', updated_at: '2023-10-01T12:00:00Z'},
-                ...tickets || []])
-        }));
-    */
-
-
     useEffect(() => {
-        fetchTickets(setTickets, setError);
-        let interval = setInterval(fetchTickets, 20 * 1000);
+        const f = () => fetchTickets(setTickets, setError);
+        f();
+        let interval = setInterval(f, 20 * 1000);
         return () => clearInterval(interval);
     }, []);
 
