@@ -75,7 +75,7 @@ const useReloadOnChangedAssets = () => {
                 });
             })
         }, 10 * 1000); // Check every 10 seconds
-    }, []);
+    }, [assetTags]);
     return {reloadState};
 
 }
